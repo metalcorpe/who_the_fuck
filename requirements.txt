@@ -1,0 +1,12 @@
+# whois
+python-whois
+whois-parser
+ipwhois
+azure-monitor-query
+aiohttp
+azure-identity
+pandas
+GitPython
+apscheduler
+SQLAlchemy
+opencensus-ext-azure

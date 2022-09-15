@@ -1,0 +1,9 @@
+*
+!*/
+
+!.gitignore
+!*.devcontainer
+!*.vscode/settings.json
+!requirements.txt
+!libs/*
+!who.py
