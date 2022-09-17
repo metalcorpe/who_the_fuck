@@ -2,7 +2,6 @@
 import argparse
 import os
 
-
 parser = argparse.ArgumentParser(prog=os.path.basename(__file__))
 
 parser.add_argument("--skip-blocklist-download",
@@ -36,7 +35,7 @@ source_group.add_argument(
     "--log-analutics-timedelta",
     dest="log_analutics_timedelta",
     type=int,
-    default=60,
+    default=90,
     help="Timedelta to search from present in minutes (M) (default 60 minutes)",
 )
 source_group.add_argument("--csv-path", dest="csv_path", type=str)

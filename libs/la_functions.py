@@ -5,11 +5,14 @@
 
 # Build the API signature
 import base64
-from datetime import datetime
 import hashlib
 import hmac
-import requests
+from datetime import datetime
+import os
 
+import requests
+from libs.logger import logging 
+log = logging.getLogger(os.path.basename(__file__))
 
 def build_signature(
     customer_id, shared_key, date, content_length, method, content_type, resource
@@ -69,6 +72,6 @@ def post_data(customer_id, shared_key, body, log_type):
     response = requests.post(uri, data=body, headers=headers)
     print(body)
     if response.status_code >= 200 and response.status_code <= 299:
-        print("Accepted")
+        log.info("Accepted")
     else:
-        print("Response code: {}".format(response.status_code))
+        log.info("Response code: {}".format(response.status_code))

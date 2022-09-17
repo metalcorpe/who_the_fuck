@@ -1,74 +1,38 @@
-import argparse
-from multiprocessing import Manager, Pool, cpu_count
-import time
-import requests, zipfile, io
-import asyncio
-from gettext import find
-import shutil
-import whois
-from whois_parser import WhoisParser
-from ipwhois import IPWhois
-from datetime import datetime, timedelta, timezone
-import os
-import pprint
-from pathlib import Path
+import io
 import ipaddress
 import json
-import hashlib
+import os
+import shutil
+import time
+import zipfile
+from gettext import find
+from multiprocessing import Manager, Pool, cpu_count
+from pathlib import Path
+
+import requests
+from apscheduler.executors.pool import ProcessPoolExecutor, ThreadPoolExecutor
+from apscheduler.jobstores.memory import MemoryJobStore
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.util import undefined
 from git import Repo, exc
-from azure.identity import DefaultAzureCredential
-import hmac
-import base64
-from azure.monitor.query import LogsQueryClient
-from azure.monitor.query import LogsQueryStatus
-from azure.core.exceptions import HttpResponseError
-import pandas as pd
 from pytz import utc
 
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore, ConflictingIdError
-from apscheduler.jobstores.base import ConflictingIdError
-from apscheduler.jobstores.memory import MemoryJobStore
-from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
-from apscheduler.triggers.interval import IntervalTrigger
-from apscheduler.util import undefined
-
-from libs.la_functions import post_data
 from libs.argument_parser import parser
+import libs.global_vars as g_vars
+from libs.inteligence import IntelligenceHandler
+from libs.la_functions import post_data
+from libs.logger import logging
 
-global big_dic
-global small_dic
-small_dic = True
+log = logging.getLogger(os.path.basename(__file__))
+
+g_vars.init()
+
+g_vars.small_dic = True
 
 # The log type is the name of the event that is being submitted
 log_type_ipblock = "IPBlock"
 log_type_ipwois = "IPWhoIs"
-
-
-def find_ip_in_blocklists(clientip):
-    entry = dict()
-    entry["cliIP"] = clientip
-    try:
-        ipobj = ipaddress.ip_address(clientip)
-    except ValueError as e:
-        print(clientip, str(e))
-        entry["Total"] = 0
-        return entry
-    global small_dic
-    try:
-        while small_dic:
-            time.sleep(15)
-            print("sleeping")
-    except:
-        pass
-
-    for i in big_dic.items():
-        for j in i[1]:
-            if ipobj in j:
-                entry[i[0]] = str(j)
-
-    entry["Total"] = len(entry) - 1
-    return entry
+log_type_getnameinfo = "IPName"
 
 
 def download_blocklists(git_dir=os.path.join("./", "blocklist-ipsets")):
@@ -77,6 +41,7 @@ def download_blocklists(git_dir=os.path.join("./", "blocklist-ipsets")):
         "https://github.com/firehol/blocklist-ipsets/archive/refs/heads/master.zip"
     )
     try:
+        log.info(f"Cloning: {git_url}")
         shutil.rmtree(git_dir, ignore_errors=True)
         Repo.clone_from(git_url, git_dir, branch="master")
     except exc.GitCommandError as e:
@@ -89,6 +54,8 @@ def download_blocklists(git_dir=os.path.join("./", "blocklist-ipsets")):
         else:
             raise e
     except Exception as e:
+        log.warning(f"Clone failed")
+        log.warning(f"GETting: {zip_url}")
         r = requests.get(zip_url)
         z = zipfile.ZipFile(io.BytesIO(r.content))
         z.extractall()
@@ -96,6 +63,7 @@ def download_blocklists(git_dir=os.path.join("./", "blocklist-ipsets")):
 
 
 def read_file(file):
+    log.info(f"Reading file: {file}")
     tmp_list = list()
     # print(Path(file).stem)
     with open(file, mode="r") as f:
@@ -108,41 +76,44 @@ def read_file(file):
                 raise
             else:
                 tmp_list.append(ip)
+        log.debug(f"File: {file} has {len(tmp_list)} entries")
         return tmp_list
+
 
 def read_file_v2(file, d, ip_list_name):
     d[ip_list_name] = read_file(file)
 
+
 def parse_dl_blocklists(git_dir):
-    global big_dic
-    global small_dic
-    big_dic = dict()
-    small_dic = True
-    
+    # global big_dic
+    # global small_dic
+    # big_dic = dict()
+    g_vars.small_dic = True
 
-    
-    manager = Manager()
+    # manager = Manager()
 
-    d = manager.dict()
+    # d = manager.dict()
     tmp_list = list()
     import timeit
 
     with Pool(cpu_count()) as p:
-            for i in os.listdir(git_dir):
-                if "stopforumspam" in i:
-                    continue
-                file = os.path.join(git_dir, i)
-                if os.path.isfile(file) is True and file.endswith((".ipset", ".netset")):
-                    ip_list_name = Path(file).stem
-                    # tmp_list.append((file, d, ip_list_name))
-                    starttime = timeit.default_timer()
-                    big_dic[ip_list_name] = read_file(file)
-                    print(f"{ip_list_name};{timeit.default_timer() - starttime}")
-                    # print(p.map(f, [1, 2, 3]))
+        for i in os.listdir(git_dir):
+            if "stopforumspam" in i:
+                continue
+            if "firehol" in i:
+                continue
+            file = os.path.join(git_dir, i)
+            if os.path.isfile(file) is True and file.endswith((".ipset", ".netset")):
+                ip_list_name = Path(file).stem
+                # tmp_list.append((file, d, ip_list_name))
+                starttime = timeit.default_timer()
+                g_vars.big_dic[ip_list_name] = read_file(file)
+                log.debug(f"List {ip_list_name} took {timeit.default_timer() - starttime}s")
+                # print(p.map(f, [1, 2, 3]))
     #     p.starmap(read_file_v2, tmp_list)
     # big_dic = d.copy()
-    small_dic = False
-    raise
+    g_vars.small_dic = False
+    # raise
 
 
 git_dir = os.path.join("./", "blocklist-ipsets")
@@ -157,58 +128,6 @@ def dowload_and_parse_blocklist(git_dir, skip_blocklist_download):
 
 
 #########################################################################################
-class IntelligenceHandler:
-    def __init__(self, query, workspace_id, timedelta) -> None:
-        self.workspace_id = workspace_id
-        self.query = query
-        self.timedelta = timedelta
-        self.credential = DefaultAzureCredential()
-        self.logs_client = LogsQueryClient(self.credential)
-        self.iplist = list()
-        pass
-
-    def query_space(self):
-        start_time = datetime(2022, 8, 31, tzinfo=timezone.utc)
-        end_time = datetime(2022, 8, 30, tzinfo=timezone.utc)
-
-        try:
-            response = self.logs_client.query_workspace(
-                workspace_id=self.workspace_id,
-                query=self.query,
-                timespan=timedelta(minutes=self.timedelta),
-                # timespan=(start_time, end_time),
-            )
-            if response.status == LogsQueryStatus.PARTIAL:
-                error = response.partial_error
-                data = response.partial_data
-                print(error.message)
-            elif response.status == LogsQueryStatus.SUCCESS:
-                data = response.tables
-            table = data[0]
-            df = pd.DataFrame(data=table.rows, columns=table.columns)
-            self.iplist = list(df.cliIP_s.unique())
-
-        except HttpResponseError as err:
-            print("something fatal happened")
-            print(err)
-
-    def check_blocklist(self):
-        result = list()
-        for ip in self.iplist:
-            ret = find_ip_in_blocklists(ip)
-            if ret["Total"] == 0:
-                continue
-            result.append(ret)
-        return result
-
-    def check_ipwhois(self):
-        result = list()
-        for ip in self.iplist:
-            ip_result = IPWhois(ip)
-            ret = ip_result.lookup_rdap(depth=0)
-            result.append(ret)
-        return result
-
 
 # hostname = "1.1.1.1"
 # hostname = "8.8.8.8"
@@ -264,24 +183,11 @@ def poll_source(args):
     dh.commit(result, log_type=log_type_ipblock)
     result = ih.check_ipwhois()
     dh.commit(result, log_type=log_type_ipwois)
+    result = ih.check_getnameinfo()
+    dh.commit(result, log_type=log_type_getnameinfo)
 
 
 if __name__ == "__main__":
-    # import logging
-
-    # from opencensus.ext.azure.log_exporter import AzureEventHandler
-
-    # logger = logging.getLogger(__name__)
-    # # TODO: replace the all-zero GUID with your instrumentation key.
-    # logger.addHandler(AzureEventHandler(
-    #     connection_string='InstrumentationKey=85d74f7f-38ff-40cc-b996-8adfaff95b4e')
-    # )
-
-    # properties = {'custom_dimensions': {'key_1': 'value_1', 'key_2': 'value_2'}}
-
-    # # Use properties in logging statements
-    # logger.warning('action_event_key', extra=properties)
-    # parser.print_help()
     args = parser.parse_args()
 
     if args.service:
