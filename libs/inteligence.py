@@ -53,6 +53,7 @@ class IntelligenceHandler:
         pass
 
     def query_space(self):
+        log.info(f"Quering Space")
         start_time = datetime(2022, 8, 31, tzinfo=timezone.utc)
         end_time = datetime(2022, 8, 30, tzinfo=timezone.utc)
 
@@ -72,6 +73,7 @@ class IntelligenceHandler:
             table = data[0]
             df = pd.DataFrame(data=table.rows, columns=table.columns)
             self.iplist = list(df.cliIP_s.unique())
+            log.info(f"Kusto Result: {len(self.iplist)}")
 
         except HttpResponseError as err:
             print("something fatal happened")
@@ -80,26 +82,29 @@ class IntelligenceHandler:
     def check_blocklist(self):
         result = list()
         for ip in self.iplist:
+            log.debug(f'{sys._getframe(  ).f_code.co_name}: Searching:{ip}')
             ret = find_ip_in_blocklists(ip)
             if ret["Total"] == 0:
                 continue
-            log.debug(f'{sys._getframe(  ).f_code.co_name}: {ret}')
+            log.debug(f'{sys._getframe(  ).f_code.co_name}: Results{ret}')
             result.append(ret)
         return result
 
     def check_ipwhois(self):
         result = list()
         for ip in self.iplist:
+            log.debug(f'{sys._getframe(  ).f_code.co_name}: Searching:{ip}')
             ip_result = IPWhois(ip)
             ret = ip_result.lookup_rdap(depth=0)
             ret["cliIP"] = ip
-            log.debug(f'{sys._getframe(  ).f_code.co_name}: {ret}')
+            log.debug(f'{sys._getframe(  ).f_code.co_name}: Results{ret}')
             result.append(ret)
         return result
 
     def check_getnameinfo(self):
         result = list()
         for ip in self.iplist:
+            log.debug(f'{sys._getframe(  ).f_code.co_name}: Searching:{ip}')
             try:
                 ip_result = getnameinfo((ip, 0), 0)
             except gaierror:
@@ -109,6 +114,6 @@ class IntelligenceHandler:
             ret["cliIP"] = ip
             if ret['cliIP'] == ret['nameinfo']:
                 continue
-            log.debug(f'{sys._getframe(  ).f_code.co_name}: {ret}')
+            log.debug(f'{sys._getframe(  ).f_code.co_name}: Results:{ret}')
             result.append(ret)
         return result

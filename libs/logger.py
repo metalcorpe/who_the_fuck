@@ -30,46 +30,21 @@ logging.config.dictConfig(
             },
         },
         "loggers": {
-            "who": {
+            "": {
                 "level": "DEBUG",
                 "propagate": True,
                 "handlers": ["console", "file"],
             },
-            "paramiko": {
-                "level": "INFO",
-                "propagate": True,
-                "handlers": ["console", "file"],
-            },
-            "portalocker": {
-                "level": "INFO",
-                "propagate": True,
-                "handlers": ["console", "file"],
-            },
-            "watchdog": {
-                "level": "INFO",
-                "propagate": True,
-                "handlers": ["console", "file"],
-            },
-            "filewatcher": {
-                "level": "INFO",
-                "propagate": True,
-                "handlers": ["console", "file"],
-            },
-            "apscheduler": {
-                "level": "INFO",
-                "propagate": True,
-                "handlers": ["console", "file"],
-            },
-            "scheduler": {
-                "level": "INFO",
-                "propagate": True,
-                "handlers": ["console", "file"],
-            },
-            "notification": {
-                "level": "INFO",
-                "propagate": True,
-                "handlers": ["console", "file"],
-            },
+            # "who": {
+            #     "level": "DEBUG",
+            #     "propagate": True,
+            #     "handlers": ["console", "file"],
+            # },
+            # "apscheduler": {
+            #     "level": "INFO",
+            #     "propagate": True,
+            #     "handlers": ["console", "file"],
+            # },
         },
     }
 )
