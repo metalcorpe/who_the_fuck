@@ -3,6 +3,7 @@
 
 !.gitignore
 !*.devcontainer
+!*.github
 !*.vscode/settings.json
 !requirements.txt
 !logs/*.md
