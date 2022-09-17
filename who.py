@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import io
 import ipaddress
 import json
@@ -17,7 +19,7 @@ from apscheduler.util import undefined
 from git import Repo, exc
 from pytz import utc
 
-from libs.argument_parser import parser
+from libs.argument_parser import ParserOfArguments
 import libs.global_vars as g_vars
 from libs.inteligence import IntelligenceHandler
 from libs.la_functions import post_data
@@ -108,7 +110,9 @@ def parse_dl_blocklists(git_dir):
                 # tmp_list.append((file, d, ip_list_name))
                 starttime = timeit.default_timer()
                 g_vars.big_dic[ip_list_name] = read_file(file)
-                log.debug(f"List {ip_list_name} took {timeit.default_timer() - starttime}s")
+                log.debug(
+                    f"List {ip_list_name} took {timeit.default_timer() - starttime}s"
+                )
                 # print(p.map(f, [1, 2, 3]))
     #     p.starmap(read_file_v2, tmp_list)
     # big_dic = d.copy()
@@ -188,7 +192,8 @@ def poll_source(args):
 
 
 if __name__ == "__main__":
-    args = parser.parse_args()
+    
+    args = ParserOfArguments(os.path.basename(__file__)).hombrew_parse()
 
     if args.service:
 
