@@ -5,6 +5,7 @@
 !*.devcontainer
 !*.github
 !*.vscode/settings.json
+!.sonarcloud.properties
 !requirements.txt
 !logs/*.md
 !libs/*.py
