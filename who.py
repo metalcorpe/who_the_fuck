@@ -1,12 +1,11 @@
 #!/usr/bin/python3
 import io
 import ipaddress
-import json
 import os
 import shutil
 import time
+import timeit
 import zipfile
-from gettext import find
 from multiprocessing import Manager, Pool, cpu_count
 from pathlib import Path
 
@@ -16,17 +15,13 @@ from apscheduler.jobstores.memory import MemoryJobStore
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.util import undefined
-from azure.core.exceptions import ResourceExistsError
-from azure.identity import DefaultAzureCredential
-from azure.storage.blob import BlobServiceClient
 from git import Repo, exc
 from pytz import utc
 
 import libs.global_vars as g_vars
-from libs.dest_handler import DestinationHandler
 from libs.argument_parser import ParserOfArguments
+from libs.dest_handler import DestinationHandler
 from libs.inteligence import IntelligenceHandler
-from libs.la_functions import post_data
 from libs.logger import logging
 
 log = logging.getLogger(os.path.basename(__file__))
@@ -71,7 +66,6 @@ def download_blocklists(git_dir=os.path.join("./", "blocklist-ipsets")):
 def read_file(file):
     log.info(f"Reading file: {file}")
     tmp_list = list()
-    # print(Path(file).stem)
     with open(file, mode="r") as f:
         f_l = f.read().splitlines()
         f_l = [x for x in f_l if not x.startswith("#")]
@@ -86,21 +80,8 @@ def read_file(file):
         return tmp_list
 
 
-# def read_file_v2(file, d, ip_list_name):
-#     d[ip_list_name] = read_file(file)
-
-
 def parse_dl_blocklists(git_dir):
-    # global big_dic
-    # global small_dic
-    # big_dic = dict()
     g_vars.small_dic = True
-
-    # manager = Manager()
-
-    # d = manager.dict()
-    tmp_list = list()
-    import timeit
 
     with Pool(cpu_count()) as p:
         for i in os.listdir(git_dir):
@@ -111,17 +92,12 @@ def parse_dl_blocklists(git_dir):
             file = os.path.join(git_dir, i)
             if os.path.isfile(file) is True and file.endswith((".ipset", ".netset")):
                 ip_list_name = Path(file).stem
-                # tmp_list.append((file, d, ip_list_name))
                 starttime = timeit.default_timer()
                 g_vars.big_dic[ip_list_name] = read_file(file)
                 log.debug(
                     f"List {ip_list_name} took {timeit.default_timer() - starttime}s"
                 )
-                # print(p.map(f, [1, 2, 3]))
-    #     p.starmap(read_file_v2, tmp_list)
-    # big_dic = d.copy()
     g_vars.small_dic = False
-    # raise
 
 
 git_dir = os.path.join("./", "blocklist-ipsets")
@@ -178,7 +154,6 @@ if __name__ == "__main__":
             name="blocklist-ipsets",
             coalesce=True,
             max_instances=1,
-            # next_run_time=undefined if os.path.exists(git_dir) else datetime.utcnow(),
         )
         scheduler.add_job(
             poll_source,
@@ -188,7 +163,6 @@ if __name__ == "__main__":
             name="ip-analysis",
             coalesce=True,
             max_instances=1,
-            # next_run_time=undefined if os.path.exists(git_dir) else datetime.utcnow(),
         )
 
         dowload_and_parse_blocklist(git_dir, args.skip_blocklist_download)

@@ -1,6 +1,7 @@
 import argparse
 import os
 
+
 # Courtesy of http://stackoverflow.com/a/10551190 with env-var retrieval fixed
 class EnvDefault(argparse.Action):
     def __init__(self, envvar, required=True, default=None, **kwargs):
@@ -21,7 +22,6 @@ class ParserOfArguments:
             prog=main_name,
             description="A foo that bars",
             epilog="And that's how you'd foo a bar",
-            # formatter_class=argparse.RawTextHelpFormatter
         )
 
         parser.add_argument(

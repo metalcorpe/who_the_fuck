@@ -10,6 +10,7 @@ from libs.logger import logging
 
 log = logging.getLogger(os.path.basename(__file__))
 
+
 class LAHandler:
     def __init__(self, workspace_id, shared_key) -> None:
         self.workspace_id = workspace_id

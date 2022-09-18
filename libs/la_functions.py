@@ -1,4 +1,3 @@
-
 #####################
 ######Functions######
 #####################
@@ -7,12 +6,15 @@
 import base64
 import hashlib
 import hmac
-from datetime import datetime
 import os
+from datetime import datetime
 
 import requests
-from libs.logger import logging 
+
+from libs.logger import logging
+
 log = logging.getLogger(os.path.basename(__file__))
+
 
 def build_signature(
     customer_id, shared_key, date, content_length, method, content_type, resource
