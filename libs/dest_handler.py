@@ -23,10 +23,12 @@ class LAHandler:
 
 class CSVHandler:
     def __init__(self) -> None:
-        pass
+        # TODO: Implement
+        raise NotImplementedError
 
     def send(self, result, log_type):
-        pass
+        # TODO: Implement
+        raise NotImplementedError
 
 
 class BlobHandler:
