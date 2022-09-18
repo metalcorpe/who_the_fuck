@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-
 import io
 import ipaddress
 import json
@@ -16,11 +15,14 @@ from apscheduler.executors.pool import ProcessPoolExecutor, ThreadPoolExecutor
 from apscheduler.jobstores.memory import MemoryJobStore
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.util import undefined
+from azure.core.exceptions import ResourceExistsError
+from azure.identity import DefaultAzureCredential
+from azure.storage.blob import BlobServiceClient
 from git import Repo, exc
 from pytz import utc
 
-from libs.argument_parser import ParserOfArguments
 import libs.global_vars as g_vars
+from libs.argument_parser import ParserOfArguments
 from libs.inteligence import IntelligenceHandler
 from libs.la_functions import post_data
 from libs.logger import logging
@@ -161,6 +163,66 @@ class CSVHandler:
         pass
 
 
+class BlobHandler:
+    def __init__(
+        self,
+        storage_account_user_auth,
+        storage_account_service_auth,
+        storage_account_name,
+        storage_account_url,
+        storage_account_key,
+        storage_account_container_name,
+    ) -> None:
+        self.storage_account_user_auth = storage_account_user_auth
+        self.storage_account_service_auth = storage_account_service_auth
+        self.storage_account_name = storage_account_name
+        self.storage_account_url = storage_account_url
+        self.storage_account_key = storage_account_key
+        self.storage_account_container_name = storage_account_container_name
+        # Instantiate a new BlobServiceClient using a connection string
+
+        if self.storage_account_user_auth:
+            self.credential = DefaultAzureCredential()
+            blob_service_client = BlobServiceClient(
+                account_url=self.storage_account_url,
+                credential=DefaultAzureCredential(),
+            )
+        elif self.storage_account_service_auth:
+            blob_service_client = BlobServiceClient(
+                account_url=self.storage_account_url,
+                credential=self.storage_account_key,
+            )
+            # blob_service_client = BlobServiceClient.from_connection_string(
+            # self.storage_account_url
+            # )
+
+        else:
+            raise NotImplementedError
+        # Instantiate a new ContainerClient
+        self.container_client = blob_service_client.get_container_client(
+            self.storage_account_container_name
+        )
+
+        try:
+            # Create new Container in the Service
+            self.container_client.create_container()
+        except ResourceExistsError as e:
+            pass
+
+    def append_data_to_blob(self, result, log_type):
+        # Instantiate a new BlobClient
+        blob_client = self.container_client.get_blob_client(log_type)
+
+        # Upload content to the Page Blob
+        for i_result in result:
+            i_result_dump = json.dumps(i_result)
+            blob_client.upload_blob(i_result_dump + "\n", blob_type="AppendBlob")
+            print("Data Appended to Blob Successfully.")
+
+    def send(self, result, log_type):
+        self.append_data_to_blob(result, log_type)
+
+
 class DestinationHandler:
     def __init__(self, args) -> None:
         if args.write_log_analytics:
@@ -170,6 +232,15 @@ class DestinationHandler:
         elif args.write_csv:
             self.handler = CSVHandler()
             raise NotImplementedError
+        elif args.write_blob_storage:
+            self.handler = BlobHandler(
+                args.storage_account_user_auth,
+                args.storage_account_service_auth,
+                args.storage_account_name,
+                args.storage_account_url,
+                args.storage_account_key,
+                args.storage_account_container_name,
+            )
         else:
             raise NotImplementedError
 
@@ -192,7 +263,7 @@ def poll_source(args):
 
 
 if __name__ == "__main__":
-    
+
     args = ParserOfArguments(os.path.basename(__file__)).hombrew_parse()
 
     if args.service:

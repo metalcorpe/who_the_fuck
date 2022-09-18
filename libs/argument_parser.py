@@ -52,6 +52,9 @@ class ParserOfArguments:
             "--write-log-analytics", dest="write_log_analytics", action="store_true"
         )
         dest_group2.add_argument("--write-csv", dest="write_csv", action="store_true")
+        dest_group2.add_argument(
+            "--write-blob-storage", dest="write_blob_storage", action="store_true"
+        )
         dest_group.add_argument(
             "--dest-workspace-id",
             dest="dest_workspace_id",
@@ -65,7 +68,45 @@ class ParserOfArguments:
             help="WARNING TEST ONLY. Log Analytics Workspace primary or secondary Connected Sources client authentication key (e.g. WW91IGJldHRlciBub3QgdXNlIHRoZSBzaGFyZWQga2V5IHlvdSBzb24gb2YgYSBiaXRjaCEhIQ==)",
         )
 
-        dest_group.add_argument("--csv-dest-folder", dest="csv_dest_folder", type=str)
+        dest_group.add_argument(
+            "--csv-dest-folder",
+            dest="csv_dest_folder",
+            type=str,
+            help="NOT IMPLEMENTED",
+        )
+        dest_group3 = dest_group.add_mutually_exclusive_group(required=True)
+        dest_group3.add_argument(
+            "--storage-account-user-auth",
+            dest="storage_account_user_auth",
+            action="store_true",
+            help="Enables user authentication using managed identity or az login. Mutually exlusive",
+        )
+        dest_group3.add_argument(
+            "--storage-account-service-auth",
+            dest="storage_account_service_auth",
+            action="store_true",
+            help="Enables service authentication using storage account key. Mutually exlusive",
+        )
+        dest_group.add_argument(
+            "--storage-account-name", dest="storage_account_name", type=str
+        )
+        dest_group.add_argument(
+            "--storage-account-container-name",
+            dest="storage_account_container_name",
+            type=str,
+        )
+        dest_group.add_argument(
+            "--storage-account-url",
+            dest="storage_account_url",
+            type=str,
+            help="Storage Account URL",
+        )
+        dest_group.add_argument(
+            "--storage-account-key",
+            dest="storage_account_key",
+            type=str,
+            help="Storage Account Key. Use with --storage-account-service-auth",
+        )
 
         cli_group = parser.add_argument_group("CLI")
 

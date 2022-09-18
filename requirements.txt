@@ -1,10 +1,11 @@
 # whois
+azure-identity
+azure-monitor-query
+azure-storage-blob
 python-whois
 whois-parser
 ipwhois
-azure-monitor-query
 aiohttp
-azure-identity
 pandas
 GitPython
 apscheduler
