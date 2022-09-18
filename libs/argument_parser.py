@@ -98,7 +98,7 @@ class ParserOfArguments:
             type=str,
             help="NOT IMPLEMENTED",
         )
-        dest_group3 = dest_group.add_mutually_exclusive_group(required=True)
+        dest_group3 = dest_group.add_mutually_exclusive_group(required=False)
         dest_group3.add_argument(
             "--storage-account-user-auth",
             dest="storage_account_user_auth",
@@ -118,6 +118,7 @@ class ParserOfArguments:
             action=EnvDefault,
             envvar="STORAGEACCOUNTCONTAINERNAME",
             help="(env=STORAGEACCOUNTCONTAINERNAME)",
+            required=False,
         )
         dest_group.add_argument(
             "--storage-account-url",
@@ -126,6 +127,7 @@ class ParserOfArguments:
             action=EnvDefault,
             envvar="STORAGEACCOUNTURL",
             help="Storage Account URL.\n(env=STORAGEACCOUNTURL)",
+            required=False,
         )
         dest_group.add_argument(
             "--storage-account-key",
@@ -134,6 +136,7 @@ class ParserOfArguments:
             action=EnvDefault,
             envvar="STORAGEACCOUNTKEY",
             help="Storage Account Key. Use with --storage-account-service-auth.\n(env=STORAGEACCOUNTKEY)",
+            required=False,
         )
 
         cli_group = parser.add_argument_group("CLI")
@@ -146,12 +149,12 @@ class ParserOfArguments:
             dest="iplist_update_interval",
             action=EnvDefault,
             envvar="IPLISTUPDATEINTERVAL",
-            help="IP List update interval in Hours(H).\n(env=IPLISTUPDATEINTERVAL)",
+            help="IP List update interval in Hours (H).\n(env=IPLISTUPDATEINTERVAL)",
         )
         service_group.add_argument(
             "--ip-analysis-interval",
             type=int,
-            default=25,
+            default=600,
             dest="ip_analysis_interval",
             action=EnvDefault,
             envvar="IPANALYSISINTERVAL",
