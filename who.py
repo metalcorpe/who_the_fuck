@@ -168,14 +168,12 @@ class BlobHandler:
         self,
         storage_account_user_auth,
         storage_account_service_auth,
-        storage_account_name,
         storage_account_url,
         storage_account_key,
         storage_account_container_name,
     ) -> None:
         self.storage_account_user_auth = storage_account_user_auth
         self.storage_account_service_auth = storage_account_service_auth
-        self.storage_account_name = storage_account_name
         self.storage_account_url = storage_account_url
         self.storage_account_key = storage_account_key
         self.storage_account_container_name = storage_account_container_name
@@ -236,7 +234,6 @@ class DestinationHandler:
             self.handler = BlobHandler(
                 args.storage_account_user_auth,
                 args.storage_account_service_auth,
-                args.storage_account_name,
                 args.storage_account_url,
                 args.storage_account_key,
                 args.storage_account_container_name,

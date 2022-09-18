@@ -1,6 +1,19 @@
 import argparse
 import os
 
+# Courtesy of http://stackoverflow.com/a/10551190 with env-var retrieval fixed
+class EnvDefault(argparse.Action):
+    def __init__(self, envvar, required=True, default=None, **kwargs):
+        if not default and envvar:
+            if envvar in os.environ:
+                default = os.environ[envvar]
+        if required and default:
+            required = False
+        super(EnvDefault, self).__init__(default=default, required=required, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, values)
+
 
 class ParserOfArguments:
     def __init__(self, main_name) -> None:
@@ -8,6 +21,7 @@ class ParserOfArguments:
             prog=main_name,
             description="A foo that bars",
             epilog="And that's how you'd foo a bar",
+            # formatter_class=argparse.RawTextHelpFormatter
         )
 
         parser.add_argument(
@@ -29,20 +43,26 @@ class ParserOfArguments:
             "--source-workspace-id",
             dest="source_workspace_id",
             type=str,
-            help="Log Analytics Workspace ID (e.g. 00000000-0000-0000-0000-000000000000)",
+            action=EnvDefault,
+            envvar="SOURCEWORKSPACEID",
+            help="Log Analytics Workspace ID (e.g. 00000000-0000-0000-0000-000000000000).\n(env=SOURCEWORKSPACEID)",
         )
         source_group.add_argument(
             "--log-analutics-kusto",
             dest="log_analutics_kusto",
             type=str,
-            help="Kusto query that returns IP list (e.g. Edge_CL | project clientIP | distinct clientIP)",
+            action=EnvDefault,
+            envvar="LOGANALYTICSKUSTO",
+            help="Kusto query that returns IP list (e.g. Edge_CL | project clientIP | distinct clientIP).\n(env=LOGANALYTICSKUSTO)",
         )
         source_group.add_argument(
             "--log-analutics-timedelta",
             dest="log_analutics_timedelta",
             type=int,
             default=90,
-            help="Timedelta to search from present in minutes (M) (default 60 minutes)",
+            action=EnvDefault,
+            envvar="LOGANALYTICSTIMEDELTA",
+            help="Timedelta to search from present in minutes (M) (default 60 minutes).\n(env=LOGANALYTICSTIMEDELTA)",
         )
         source_group.add_argument("--csv-path", dest="csv_path", type=str)
 
@@ -59,13 +79,17 @@ class ParserOfArguments:
             "--dest-workspace-id",
             dest="dest_workspace_id",
             type=str,
-            help="Log Analytics Workspace ID (e.g. 00000000-0000-0000-0000-000000000000)",
+            action=EnvDefault,
+            envvar="DESTWORKSPACEID",
+            help="Log Analytics Workspace ID (e.g. 00000000-0000-0000-0000-000000000000).\n(env=DESTWORKSPACEID)",
         )
         dest_group.add_argument(
             "--dest-workspace-shared-key",
             dest="dest_workspace_shared_key",
             type=str,
-            help="WARNING TEST ONLY. Log Analytics Workspace primary or secondary Connected Sources client authentication key (e.g. WW91IGJldHRlciBub3QgdXNlIHRoZSBzaGFyZWQga2V5IHlvdSBzb24gb2YgYSBiaXRjaCEhIQ==)",
+            action=EnvDefault,
+            envvar="DESTWORKSPACESHAREDKEY",
+            help="WARNING TEST ONLY. Log Analytics Workspace primary or secondary Connected Sources client authentication key (e.g. WW91IGJldHRlciBub3QgdXNlIHRoZSBzaGFyZWQga2V5IHlvdSBzb24gb2YgYSBiaXRjaCEhIQ==).\n(env=DESTWORKSPACESHAREDKEY)",
         )
 
         dest_group.add_argument(
@@ -79,7 +103,7 @@ class ParserOfArguments:
             "--storage-account-user-auth",
             dest="storage_account_user_auth",
             action="store_true",
-            help="Enables user authentication using managed identity or az login. Mutually exlusive",
+            help="Enables user authentication using: ManagedIdentityCredential,	SharedTokenCacheCredential, VisualStudioCodeCredential, AzureCliCredential, AzurePowerShellCredential. Mutually exlusive",
         )
         dest_group3.add_argument(
             "--storage-account-service-auth",
@@ -88,24 +112,28 @@ class ParserOfArguments:
             help="Enables service authentication using storage account key. Mutually exlusive",
         )
         dest_group.add_argument(
-            "--storage-account-name", dest="storage_account_name", type=str
-        )
-        dest_group.add_argument(
             "--storage-account-container-name",
             dest="storage_account_container_name",
             type=str,
+            action=EnvDefault,
+            envvar="STORAGEACCOUNTCONTAINERNAME",
+            help="(env=STORAGEACCOUNTCONTAINERNAME)",
         )
         dest_group.add_argument(
             "--storage-account-url",
             dest="storage_account_url",
             type=str,
-            help="Storage Account URL",
+            action=EnvDefault,
+            envvar="STORAGEACCOUNTURL",
+            help="Storage Account URL.\n(env=STORAGEACCOUNTURL)",
         )
         dest_group.add_argument(
             "--storage-account-key",
             dest="storage_account_key",
             type=str,
-            help="Storage Account Key. Use with --storage-account-service-auth",
+            action=EnvDefault,
+            envvar="STORAGEACCOUNTKEY",
+            help="Storage Account Key. Use with --storage-account-service-auth.\n(env=STORAGEACCOUNTKEY)",
         )
 
         cli_group = parser.add_argument_group("CLI")
@@ -116,14 +144,18 @@ class ParserOfArguments:
             type=int,
             default=8,
             dest="iplist_update_interval",
-            help="IP List update interval in Hours(H)",
+            action=EnvDefault,
+            envvar="IPLISTUPDATEINTERVAL",
+            help="IP List update interval in Hours(H).\n(env=IPLISTUPDATEINTERVAL)",
         )
         service_group.add_argument(
             "--ip-analysis-interval",
             type=int,
             default=25,
             dest="ip_analysis_interval",
-            help="IP List update interval in Seconds (S)",
+            action=EnvDefault,
+            envvar="IPANALYSISINTERVAL",
+            help="IP List update interval in Seconds (S).\n(env=IPANALYSISINTERVAL)",
         )
 
         self.parser = parser
