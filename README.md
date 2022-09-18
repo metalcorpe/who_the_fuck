@@ -8,7 +8,7 @@ It is a short utility to quickly analyze requesting IPs from deferent sources li
 
 I have spent too much time creating the help me sto there you go...
 
-``` python
+``` bash
 usage: who.py [-h] [--skip-blocklist-download] (--service | --cli) (--log-analytics | --csv) --source-workspace-id SOURCE_WORKSPACE_ID --log-analutics-kusto LOG_ANALUTICS_KUSTO
               [--log-analutics-timedelta LOG_ANALUTICS_TIMEDELTA] [--csv-path CSV_PATH] (--write-log-analytics | --write-csv | --write-blob-storage) --dest-workspace-id DEST_WORKSPACE_ID
               --dest-workspace-shared-key DEST_WORKSPACE_SHARED_KEY [--csv-dest-folder CSV_DEST_FOLDER] (--storage-account-user-auth | --storage-account-service-auth)
