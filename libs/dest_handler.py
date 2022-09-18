@@ -69,6 +69,7 @@ class BlobHandler:
             # Create new Container in the Service
             self.container_client.create_container()
         except ResourceExistsError as e:
+            log.warn(e)
             pass
 
     def append_data_to_blob(self, result, log_type):
