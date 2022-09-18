@@ -1,5 +1,18 @@
 # Who The Fuck (Made That Request?)
 
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=metalcorpe_who_the_fuck&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=metalcorpe_who_the_fuck)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=metalcorpe_who_the_fuck&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=metalcorpe_who_the_fuck)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=metalcorpe_who_the_fuck&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=metalcorpe_who_the_fuck)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=metalcorpe_who_the_fuck&metric=bugs)](https://sonarcloud.io/summary/new_code?id=metalcorpe_who_the_fuck)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=metalcorpe_who_the_fuck&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=metalcorpe_who_the_fuck)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=metalcorpe_who_the_fuck&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=metalcorpe_who_the_fuck)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=metalcorpe_who_the_fuck&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=metalcorpe_who_the_fuck)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=metalcorpe_who_the_fuck&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=metalcorpe_who_the_fuck)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=metalcorpe_who_the_fuck&metric=coverage)](https://sonarcloud.io/summary/new_code?id=metalcorpe_who_the_fuck)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=metalcorpe_who_the_fuck&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=metalcorpe_who_the_fuck)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=metalcorpe_who_the_fuck&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=metalcorpe_who_the_fuck)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/metalcorpe/who_the_fuck/badge)](https://api.securityscorecards.dev/projects/github.com/metalcorpe/who_the_fuck)
+
 ## Intro
 
 It is a short utility to quickly analyze requesting IPs from deferent sources like Azure Log Anaytics, CSV files, flat log etc. For the time being only Log Analytics Workspace is implemented as a log source. The utility exports logs to Log Analytics and Blob Storage (more options can be inplemented) for corelations.
