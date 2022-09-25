@@ -2,7 +2,8 @@ import ipaddress
 import os
 import sys
 import time
-from datetime import datetime, timedelta, timezone
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import timedelta
 from socket import gaierror, getnameinfo
 
 import pandas as pd
@@ -22,14 +23,12 @@ def find_ip_in_blocklists(clientip):
     entry["cliIP"] = clientip
     try:
         ipobj = ipaddress.ip_address(clientip)
-    except ValueError as e:
-        print(clientip, str(e))
-        entry["Total"] = 0
-        return entry
+    except ValueError:
+        raise
     try:
         while g_vars.small_dic:
             time.sleep(15)
-            print("sleeping")
+            log.warn("Blocklist does not exist yet. Sleeping...")
     except:
         pass
     for i in g_vars.big_dic.items():
@@ -38,7 +37,53 @@ def find_ip_in_blocklists(clientip):
                 entry[i[0]] = str(j)
 
     entry["Total"] = len(entry) - 1
+    assert entry["Total"] != 0
     return entry
+
+
+def find_ip_in_rdap(ip):
+    ip_result = IPWhois(ip)
+    # ret = ip_result.lookup_rdap(depth=0)
+    ret = ip_result.lookup_whois()
+    ret["cliIP"] = ip
+    return ret
+
+
+def get_name_info(ip):
+    try:
+        ip_result = getnameinfo((ip, 0), 0)
+    except gaierror as e:
+        raise e
+    ret = dict()
+    ret["nameinfo"] = ip_result[0]
+    ret["cliIP"] = ip
+    assert ret["cliIP"] != ret["nameinfo"]
+    return ret
+
+
+def get_name_info_v2(ip):
+    from dns import exception, resolver, reversename
+
+    try:
+        rev_name = reversename.from_address(ip)
+        my_resolver = resolver.Resolver()
+
+        my_resolver.nameservers = ["1.1.1.1", "8.8.8.8", "9.9.9.9"]
+        ip_result = str(my_resolver.query(rev_name, "PTR")[0])
+    except gaierror:
+        raise exception.DNSException
+    except resolver.NXDOMAIN as e:
+        raise exception.DNSException
+    except (exception.Timeout, resolver.NoNameservers, resolver.NoAnswer) as e:
+        raise exception.DNSException
+    except Exception as e:
+        raise exception.DNSException
+    ret = dict()
+    ret["nameinfo"] = ip_result
+    ret["cliIP"] = ip
+    if ret["cliIP"] == ret["nameinfo"]:
+        raise exception.DNSException
+    return ret
 
 
 class IntelligenceHandler:
@@ -77,39 +122,51 @@ class IntelligenceHandler:
 
     def check_blocklist(self):
         result = list()
-        for ip in self.iplist:
-            log.debug(f"{sys._getframe(  ).f_code.co_name}: Searching:{ip}")
-            ret = find_ip_in_blocklists(ip)
-            if ret["Total"] == 0:
-                continue
-            log.debug(f"{sys._getframe(  ).f_code.co_name}: Results{ret}")
-            result.append(ret)
+        with ThreadPoolExecutor() as executor:
+            future_to_url = {
+                executor.submit(find_ip_in_blocklists, ip) for ip in self.iplist
+            }
+
+            for future in as_completed(future_to_url):
+                try:
+                    ret = future.result()
+                    log.debug(f"{sys._getframe(  ).f_code.co_name}: Results{ret}")
+                    result.append(ret)
+                except Exception as e:
+                    print("Looks like something went wrong:", e)
         return result
 
     def check_ipwhois(self):
         result = list()
-        for ip in self.iplist:
-            log.debug(f"{sys._getframe(  ).f_code.co_name}: Searching:{ip}")
-            ip_result = IPWhois(ip)
-            ret = ip_result.lookup_rdap(depth=0)
-            ret["cliIP"] = ip
-            log.debug(f"{sys._getframe(  ).f_code.co_name}: Results{ret}")
-            result.append(ret)
+        with ThreadPoolExecutor() as executor:
+            future_to_url = {executor.submit(find_ip_in_rdap, ip) for ip in self.iplist}
+
+            for future in as_completed(future_to_url):
+                try:
+                    ret = future.result()
+                    log.debug(f"{sys._getframe(  ).f_code.co_name}: Results{ret}")
+                    result.append(ret)
+                except Exception as e:
+                    print("Looks like something went wrong:", e)
+
         return result
 
     def check_getnameinfo(self):
         result = list()
-        for ip in self.iplist:
-            log.debug(f"{sys._getframe(  ).f_code.co_name}: Searching:{ip}")
-            try:
-                ip_result = getnameinfo((ip, 0), 0)
-            except gaierror:
-                continue
-            ret = dict()
-            ret["nameinfo"] = ip_result[0]
-            ret["cliIP"] = ip
-            if ret["cliIP"] == ret["nameinfo"]:
-                continue
-            log.debug(f"{sys._getframe(  ).f_code.co_name}: Results:{ret}")
-            result.append(ret)
+        with ThreadPoolExecutor() as executor:
+            future_to_url = {
+                executor.submit(get_name_info_v2, ip) for ip in self.iplist
+            }
+
+            log.debug(
+                f"{sys._getframe(  ).f_code.co_name}: Looping over resulting tasks"
+            )
+            for future in as_completed(future_to_url):
+                try:
+                    ret = future.result()
+                    log.debug(f"{sys._getframe(  ).f_code.co_name}: Results{ret}")
+                    result.append(ret)
+                except Exception as e:
+                    print("Looks like something went wrong:", e)
+
         return result

@@ -72,8 +72,7 @@ def post_data(customer_id, shared_key, body, log_type):
     }
 
     response = requests.post(uri, data=body, headers=headers)
-    print(body)
     if response.status_code >= 200 and response.status_code <= 299:
-        log.info("Accepted")
+        log.info(f"Accepted: {log_type}, Len: {len(body)}")
     else:
-        log.info("Response code: {}".format(response.status_code))
+        log.error("Response code: {}".format(response.status_code))
