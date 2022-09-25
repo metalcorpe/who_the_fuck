@@ -10,6 +10,7 @@ import pandas as pd
 from azure.core.exceptions import HttpResponseError
 from azure.identity import DefaultAzureCredential
 from azure.monitor.query import LogsQueryClient, LogsQueryStatus
+from dns import exception, resolver, reversename
 from ipwhois import IPWhois
 
 import libs.global_vars as g_vars
@@ -62,8 +63,6 @@ def get_name_info(ip):
 
 
 def get_name_info_v2(ip):
-    from dns import exception, resolver, reversename
-
     try:
         rev_name = reversename.from_address(ip)
         my_resolver = resolver.Resolver()
